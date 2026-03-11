@@ -1,0 +1,44 @@
+services:
+  manager:
+    build:
+      context: .
+      dockerfile: Dockerfile.manager
+    ports:
+      - "8080:8080"
+    environment:
+      - WORKER_URLS=http://worker1:8081,http://worker2:8081,http://worker3:8081
+      - ALPHABET=abcdefghijklmnopqrstuvwxyz0123456789
+    depends_on:
+      - worker1
+      - worker2
+      - worker3
+
+  worker1:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    ports:
+      - "8081:8081"
+    environment:
+      - MANAGER_URL=http://manager:8080
+      - WORKER_PORT=8081
+
+  worker2:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    ports:
+      - "8082:8081"
+    environment:
+      - MANAGER_URL=http://manager:8080
+      - WORKER_PORT=8081
+
+  worker3:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    ports:
+      - "8083:8081"
+    environment:
+      - MANAGER_URL=http://manager:8080
+      - WORKER_PORT=8081

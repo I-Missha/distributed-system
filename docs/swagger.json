@@ -1,0 +1,67 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is an internal API for the CrackHash Worker.",
+        "title": "Worker Internal API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "paths": {
+        "/internal/api/worker/hash/crack/task": {
+            "post": {
+                "description": "Receives a task with hash, max length, alphabet, and partition info, then starts processing asynchronously.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Receive a hash cracking task from the manager",
+                "parameters": [
+                    {
+                        "description": "Task Data",
+                        "name": "task",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.WorkerTask"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Task accepted"
+                    },
+                    "400": {
+                        "description": "Invalid request body"
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.WorkerTask": {
+            "type": "object",
+            "properties": {
+                "alphabet": {
+                    "type": "string"
+                },
+                "hash": {
+                    "type": "string"
+                },
+                "maxLength": {
+                    "type": "integer"
+                },
+                "partNumber": {
+                    "type": "integer"
+                },
+                "requestId": {
+                    "type": "string"
+                },
+                "totalParts": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}
