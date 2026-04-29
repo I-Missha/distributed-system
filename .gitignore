@@ -1,2 +1,4 @@
 tmp/manager.exe
 tmp/worker.exe
+.obsidian/*
+./cmd/.obsidian/*

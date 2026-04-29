@@ -19,48 +19,8 @@ CrackHash — это распределенная система для взло
     *   При совпадении хэша сохраняет найденное слово.
     *   По завершении перебора своей части пространства, отправляет результаты обратно Менеджеру.
 
-### Схема взаимодействия (Sequence Diagram)
-
-```mermaid
-sequenceDiagram
-    participant Client
-    participant Manager
-    participant Worker 1
-    participant Worker 2
-    participant Worker 3
-
-    Client->>Manager: POST /api/hash/crack {hash, maxLength}
-    Manager-->>Client: 200 OK {requestId}
-    
-    note over Manager: Создание задачи (Status: IN_PROGRESS)
-    
-    par Разделение задач
-        Manager->>Worker 1: POST /internal/api/worker/hash/crack/task (Part 0/3)
-        Manager->>Worker 2: POST /internal/api/worker/hash/crack/task (Part 1/3)
-        Manager->>Worker 3: POST /internal/api/worker/hash/crack/task (Part 2/3)
-    end
-    
-    Worker 1-->>Manager: 200 OK (Task accepted)
-    Worker 2-->>Manager: 200 OK (Task accepted)
-    Worker 3-->>Manager: 200 OK (Task accepted)
-    
-    note over Worker 1, Worker 3: Асинхронный перебор пространства
-    
-    Client->>Manager: GET /api/hash/status?requestId=...
-    Manager-->>Client: 200 OK {status: "IN_PROGRESS", progress: 0}
-    
-    Worker 1->>Manager: PATCH /internal/api/manager/hash/crack/request {foundWords}
-    note over Manager: Агрегация: Progress 33%
-    
-    Worker 2->>Manager: PATCH /internal/api/manager/hash/crack/request {foundWords}
-    note over Manager: Агрегация: Progress 66%
-    
-    Worker 3->>Manager: PATCH /internal/api/manager/hash/crack/request {foundWords}
-    note over Manager: Агрегация: Progress 100%. Status: READY
-    
-    Client->>Manager: GET /api/hash/status?requestId=...
-    Manager-->>Client: 200 OK {status: "READY", data: ["word"]}
-```
+### Схема взаимодействия
+![[Pasted image 20260429170323.png]]
 
 ## Инструкция по запуску
 
