@@ -1,4 +1,4 @@
-<div class="task-card" id="task-{{.RequestID}}" hx-get="/status?requestId={{.RequestID}}" hx-trigger="every 30s, click from:#refresh-{{.RequestID}}" hx-swap="outerHTML">
+<div class="task-card" id="task-{{.RequestID}}" hx-get="/status?requestId={{.RequestID}}" {{if or (eq .Status "READY") (eq .Status "ERROR")}}hx-trigger="click from:#refresh-{{.RequestID}}"{{else}}hx-trigger="every 30s, click from:#refresh-{{.RequestID}}"{{end}} hx-swap="outerHTML">
     <div class="task-header">
         <span class="task-id" title="{{.RequestID}}">ID: {{.ShortID}}</span>
         <button id="refresh-{{.RequestID}}" class="refresh-btn" type="button" title="Refresh Now">

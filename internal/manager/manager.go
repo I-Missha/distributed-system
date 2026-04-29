@@ -42,6 +42,8 @@ func NewManager(workerURLs []string, alphabet string) *Manager {
 	}
 }
 
+const magicConstant = 7
+
 func (m *Manager) CreateTask(hash string, maxLength int) string {
 	requestID := uuid.New().String()
 	totalWorkers := len(m.workerURLs)
@@ -51,7 +53,7 @@ func (m *Manager) CreateTask(hash string, maxLength int) string {
 		Status:         models.StatusInProgress,
 		Progress:       0,
 		Data:           []string{},
-		TotalParts:     totalWorkers,
+		TotalParts:     totalWorkers * magicConstant,
 		PartsCompleted: 0,
 		Hash:           hash,
 		MaxLength:      maxLength,
@@ -136,29 +138,37 @@ func (m *Manager) UpdateTask(result models.WorkerResult) {
 }
 
 func (m *Manager) dispatchTasks(task *Task) {
-	for i, workerURL := range m.workerURLs {
-		workerTask := models.WorkerTask{
-			RequestID:  task.ID,
-			Hash:       task.Hash,
-			MaxLength:  task.MaxLength,
-			PartNumber: i,
-			TotalParts: task.TotalParts,
-			Alphabet:   m.alphabet,
-		}
-
-		go func(url string, wt models.WorkerTask) {
-			err := m.sendToWorker(url, wt)
-			if err != nil {
-				log.Printf("Failed to dispatch task %s part %d to %s: %v", wt.RequestID, wt.PartNumber, url, err)
-
-				m.UpdateTask(models.WorkerResult{
-					RequestID:  wt.RequestID,
-					PartNumber: wt.PartNumber,
-					Error:      true,
-				})
+	sentTasks := 0
+	for sentTasks < task.TotalParts {
+		for _, workerURL := range m.workerURLs {
+			if sentTasks >= task.TotalParts {
+				break
 			}
-		}(workerURL, workerTask)
+			workerTask := models.WorkerTask{
+				RequestID:  task.ID,
+				Hash:       task.Hash,
+				MaxLength:  task.MaxLength,
+				PartNumber: sentTasks,
+				TotalParts: task.TotalParts,
+				Alphabet:   m.alphabet,
+			}
+
+			go func(url string, wt models.WorkerTask) {
+				err := m.sendToWorker(url, wt)
+				if err != nil {
+					log.Printf("Failed to dispatch task %s part %d to %s: %v", wt.RequestID, wt.PartNumber, url, err)
+
+					m.UpdateTask(models.WorkerResult{
+						RequestID:  wt.RequestID,
+						PartNumber: wt.PartNumber,
+						Error:      true,
+					})
+				}
+			}(workerURL, workerTask)
+			sentTasks++
+		}
 	}
+
 }
 
 func (m *Manager) sendToWorker(workerURL string, task models.WorkerTask) error {
