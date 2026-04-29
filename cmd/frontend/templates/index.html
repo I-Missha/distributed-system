@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>CrackHash Dashboard</title>
+        <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+        <style>
+            :root {
+                --primary-color: #3498db;
+                --success-color: #2ecc71;
+                --warning-color: #f39c12;
+                --danger-color: #e74c3c;
+                --bg-color: #f8f9fa;
+                --card-bg: #ffffff;
+                --text-main: #2c3e50;
+                --text-muted: #7f8c8d;
+            }
+
+            body {
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                background-color: var(--bg-color);
+                color: var(--text-main);
+                margin: 0;
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            h1 {
+                color: var(--text-main);
+                margin-bottom: 30px;
+            }
+
+            .dashboard-container {
+                display: flex;
+                gap: 30px;
+                width: 100%;
+                max-width: 1200px;
+                align-items: flex-start;
+            }
+
+            /* Form Section */
+            .form-section {
+                flex: 0 0 350px;
+                background: var(--card-bg);
+                padding: 25px;
+                border-radius: 10px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+                position: sticky;
+                top: 20px;
+            }
+
+            .form-section h2 {
+                margin-top: 0;
+                font-size: 1.2rem;
+                border-bottom: 2px solid #eee;
+                padding-bottom: 10px;
+                margin-bottom: 20px;
+            }
+
+            .form-group {
+                margin-bottom: 15px;
+            }
+
+            label {
+                display: block;
+                font-weight: 600;
+                margin-bottom: 5px;
+                font-size: 0.9rem;
+            }
+
+            input {
+                width: 100%;
+                padding: 10px;
+                font-size: 14px;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                box-sizing: border-box;
+                transition: border-color 0.3s;
+            }
+
+            input:focus {
+                outline: none;
+                border-color: var(--primary-color);
+            }
+
+            button.submit-btn {
+                width: 100%;
+                padding: 12px;
+                font-size: 16px;
+                font-weight: bold;
+                background-color: var(--primary-color);
+                color: white;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                transition:
+                    background 0.3s,
+                    transform 0.1s;
+                margin-top: 10px;
+            }
+
+            button.submit-btn:hover {
+                background-color: #2980b9;
+            }
+
+            button.submit-btn:active {
+                transform: scale(0.98);
+            }
+
+            .spinner {
+                display: none;
+                margin: 15px auto 0;
+                width: 30px;
+                height: 30px;
+                border: 3px solid rgba(0, 0, 0, 0.1);
+                border-left-color: var(--primary-color);
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+
+            .htmx-request .spinner {
+                display: block;
+            }
+            .htmx-request .submit-btn {
+                opacity: 0.7;
+                pointer-events: none;
+            }
+
+            @keyframes spin {
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+
+            /* Tasks Grid Section */
+            .tasks-section {
+                flex: 1;
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: 20px;
+            }
+
+            /* Task Card Styling */
+            .task-card {
+                background: var(--card-bg);
+                border-radius: 8px;
+                padding: 20px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+                display: flex;
+                flex-direction: column;
+                border-left: 4px solid var(--primary-color);
+                transition:
+                    transform 0.2s,
+                    box-shadow 0.2s;
+            }
+
+            .task-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            }
+
+            .task-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 1px solid #eee;
+                padding-bottom: 10px;
+                margin-bottom: 15px;
+            }
+
+            .task-id {
+                font-family: monospace;
+                font-size: 0.9rem;
+                color: var(--text-muted);
+                background: #f1f2f6;
+                padding: 3px 6px;
+                border-radius: 4px;
+            }
+
+            .refresh-btn {
+                background: none;
+                border: none;
+                color: var(--primary-color);
+                font-size: 1.2rem;
+                cursor: pointer;
+                padding: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
+                transition:
+                    background 0.2s,
+                    transform 0.3s;
+            }
+
+            .refresh-btn:hover {
+                background: #e1f0fa;
+            }
+
+            .refresh-btn:active {
+                transform: rotate(180deg);
+            }
+
+            /* Spinner for individual card refresh */
+            .task-card.htmx-request .refresh-btn {
+                animation: spin 1s linear infinite;
+                pointer-events: none;
+            }
+
+            .task-hash {
+                font-family: monospace;
+                word-break: break-all;
+                margin-bottom: 15px;
+                font-size: 0.85rem;
+                color: #555;
+            }
+
+            .status-badge {
+                display: inline-block;
+                padding: 4px 8px;
+                border-radius: 12px;
+                font-size: 0.8rem;
+                font-weight: bold;
+                color: white;
+                margin-bottom: 10px;
+            }
+
+            .status-progress {
+                background-color: var(--warning-color);
+            }
+            .status-ready {
+                background-color: var(--success-color);
+            }
+            .status-error {
+                background-color: var(--danger-color);
+            }
+
+            .progress-container {
+                width: 100%;
+                height: 8px;
+                background-color: #ecf0f1;
+                border-radius: 4px;
+                overflow: hidden;
+                margin: 10px 0;
+            }
+
+            .progress-bar {
+                height: 100%;
+                background-color: var(--primary-color);
+                transition: width 0.5s ease-in-out;
+            }
+
+            .progress-bar-success {
+                background-color: var(--success-color);
+            }
+
+            .progress-text {
+                font-size: 0.8rem;
+                color: var(--text-muted);
+                text-align: right;
+            }
+
+            .results-container {
+                margin-top: 15px;
+                padding-top: 15px;
+                border-top: 1px dashed #eee;
+            }
+
+            .results-list {
+                list-style-type: none;
+                padding: 0;
+                margin: 10px 0 0 0;
+            }
+
+            .results-list li {
+                background: #f1f2f6;
+                margin-bottom: 5px;
+                padding: 6px 10px;
+                border-radius: 4px;
+                font-family: monospace;
+                font-size: 0.9rem;
+                color: #2c3e50;
+                border-left: 3px solid var(--success-color);
+            }
+
+            .no-results {
+                color: var(--danger-color);
+                font-size: 0.9rem;
+                margin-top: 10px;
+                font-style: italic;
+            }
+
+            .error-msg {
+                color: var(--danger-color);
+                font-size: 0.9rem;
+                margin-top: 10px;
+            }
+
+            .empty-state {
+                grid-column: 1 / -1;
+                text-align: center;
+                padding: 50px;
+                color: var(--text-muted);
+                background: var(--card-bg);
+                border-radius: 8px;
+                border: 2px dashed #ddd;
+            }
+
+            @media (max-width: 768px) {
+                .dashboard-container {
+                    flex-direction: column;
+                }
+                .form-section {
+                    flex: none;
+                    width: 100%;
+                    box-sizing: border-box;
+                    position: static;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <h1>CrackHash Cluster Dashboard</h1>
+
+        <div class="dashboard-container">
+            <!-- Form Section -->
+            <div class="form-section">
+                <h2>Create New Task</h2>
+                <form
+                    hx-post="/crack"
+                    hx-target="#tasks-container"
+                    hx-swap="afterbegin"
+                    hx-indicator=".spinner"
+                >
+                    <div class="form-group">
+                        <label for="hash">MD5 Hash:</label>
+                        <input
+                            type="text"
+                            id="hash"
+                            name="hash"
+                            required
+                            placeholder="e.g. e2fc714c4727ee9395f324cd2e7f331f"
+                            pattern="^[a-fA-F0-9]{32}$"
+                            title="Must be a 32-character MD5 hash"
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="maxLength">Max Length:</label>
+                        <input
+                            type="number"
+                            id="maxLength"
+                            name="maxLength"
+                            required
+                            min="1"
+                            max="15"
+                            value="4"
+                        />
+                    </div>
+
+                    <button type="submit" class="submit-btn">
+                        Enqueue Task
+                    </button>
+                    <div class="spinner"></div>
+                </form>
+            </div>
+
+            <!-- Tasks Grid Section -->
+            <div class="tasks-section" id="tasks-container">
+                <!-- New tasks will be prepended here by HTMX -->
+                <div class="empty-state" id="empty-state">
+                    <h3>No Active Tasks</h3>
+                    <p>Submit a new hash on the left to start cracking.</p>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Simple script to remove empty state when a task is added
+            document.body.addEventListener("htmx:afterSwap", function (evt) {
+                if (evt.detail.target.id === "tasks-container") {
+                    const emptyState = document.getElementById("empty-state");
+                    if (emptyState) {
+                        emptyState.remove();
+                    }
+                }
+            });
+        </script>
+    </body>
+</html>

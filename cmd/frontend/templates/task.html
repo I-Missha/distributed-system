@@ -1,0 +1,46 @@
+<div class="task-card" id="task-{{.RequestID}}" hx-get="/status?requestId={{.RequestID}}" hx-trigger="every 30s, click from:#refresh-{{.RequestID}}" hx-swap="outerHTML">
+    <div class="task-header">
+        <span class="task-id" title="{{.RequestID}}">ID: {{.ShortID}}</span>
+        <button id="refresh-{{.RequestID}}" class="refresh-btn" type="button" title="Refresh Now">
+            &#x21bb;
+        </button>
+    </div>
+
+    <div class="task-body">
+        <div class="task-hash">Hash: {{.Hash}}</div>
+
+        {{if eq .Status "IN_PROGRESS"}}
+            <div class="status-badge status-progress">In Progress</div>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: {{.Progress}}%;"></div>
+            </div>
+            <div class="progress-text">{{.Progress}}% completed</div>
+
+        {{else if eq .Status "READY"}}
+            <div class="status-badge status-ready">Ready</div>
+            <div class="progress-container">
+                <div class="progress-bar progress-bar-success" style="width: 100%;"></div>
+            </div>
+
+            <div class="results-container">
+                <strong>Found Words:</strong>
+                {{if .Data}}
+                    <ul class="results-list">
+                    {{range .Data}}
+                        <li>{{.}}</li>
+                    {{end}}
+                    </ul>
+                {{else}}
+                    <div class="no-results">No matches found</div>
+                {{end}}
+            </div>
+
+        {{else if eq .Status "ERROR"}}
+            <div class="status-badge status-error">Error</div>
+            <div class="error-msg">Task encountered an error during processing.</div>
+
+        {{else}}
+            <div class="status-badge">{{.Status}}</div>
+        {{end}}
+    </div>
+</div>

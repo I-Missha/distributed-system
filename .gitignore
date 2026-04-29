@@ -2,3 +2,7 @@ tmp/manager.exe
 tmp/worker.exe
 .obsidian/*
 ./cmd/.obsidian/*
+cmd/.obsidian/app.json
+cmd/.obsidian/appearance.json
+cmd/.obsidian/core-plugins.json
+cmd/.obsidian/workspace.json
